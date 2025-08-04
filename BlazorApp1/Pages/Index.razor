@@ -1,0 +1,25 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<button @onclick="() => HighlightButton(1)"
+        class="@(selectedIndex == 1 ? "btn btn-primary highlight" : "btn btn-primary")">
+    ボタン1
+</button>
+<button @onclick="() => HighlightButton(2)"
+        class="@(selectedIndex == 2 ? "btn btn-primary highlight" : "btn btn-primary")">
+    ボタン2
+</button>
+<button @onclick="() => HighlightButton(3)"
+        class="@(selectedIndex == 3 ? "btn btn-primary highlight" : "btn btn-primary")">
+    ボタン3
+</button>
+
+@code {
+    private int selectedIndex = 0;
+
+    private void HighlightButton(int index)
+    {
+        selectedIndex = index;
+    }
+}
