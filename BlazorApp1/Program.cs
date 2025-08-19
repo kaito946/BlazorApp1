@@ -1,28 +1,52 @@
-using BlazorApp1.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+
+// PageRouteModelConventionを追加
+builder.Services.Configure<RazorPagesOptions>(options =>
+{
+    var userBasePath = builder.Configuration["UserBasePath"]?.TrimEnd('/') ?? "";
+
+    // すべてのページにベースパスを追加
+    options.Conventions.Add(new CustomPageRouteModelConvention(userBasePath));
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-}
-
-
-app.UseStaticFiles();
-
 app.UseRouting();
-
+app.MapRazorPages();
 app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+// カスタムページルート規約
+public class CustomPageRouteModelConvention : IPageRouteModelConvention
+{
+    private readonly string _basePath;
+
+    public CustomPageRouteModelConvention(string basePath)
+    {
+        _basePath = basePath;
+    }
+
+    public void Apply(PageRouteModel model)
+    {
+        var selectorCount = model.Selectors.Count;
+        for (var i = 0; i < selectorCount; i++)
+        {
+            var selector = model.Selectors[i];
+            var template = selector.AttributeRouteModel?.Template;
+
+            if (!string.IsNullOrEmpty(template))
+            {
+                // 既存のルートを新しいベースパス付きのルートに変更
+                selector.AttributeRouteModel.Template = $"{_basePath.TrimStart('/')}/{template.TrimStart('/')}";
+            }
+        }
+    }
+}
